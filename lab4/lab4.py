@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 '''
 This file contains tools for calculating timeseries of temperature for
-Kangerlussuaq and plotting heat map and seasonal temperature profile 
+Kangerlussuaq and plotting heat map and seasonal temperature profile
 for the ground temperature system.
 '''
 
@@ -165,30 +165,93 @@ def heatdiff(xmax, tmax, dx, dt, c2=1, neumann=False, debug=True):
     return xgrid, tgrid, U
 
 
+def plot_groundtemp(time, depth, heat, outname="ground_profile.png",
+                    dx=.5, c2=2.5e-7):
+    '''
+    Create a plot of Kangerlussuaq ground temperature. The figure and axes
+    objects are returned for further modification as necessary.
+
+    Parameters
+    ----------
+    time : 1D numpy array
+        Time (in years) of the simulation.
+    depth : 1D numpy array
+        The depth, in meters, of the ground corresponding to the heat array.
+    heat : 2D numpy array
+        The result of a the Kangerlussuaq function heat solver.
+    outname : string, defaults to "ground_profile.png"
+        Set file name for saving result.
+    dx, c2 : floats
+        Set values for grid step and diffusion coefficient for labeling plot.
+
+    Returns
+    -------
+    fig : Matplotlib figure object
+        Figure object containing the resulting plot.
+    ax1, ax2 : Matplotlib axes objects
+        Axes object containing the plots.
+    '''
+
+    # Extract summer and winter ground temp curves:
+    summer = heat[:, 365:].max(axis=1)
+    winter = heat[:, 365:].min(axis=1)
+
+    # Create figure with 2 axes.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
+
+    # LEFT PLOT: Contour of temp vs. depth and time.
+    map = ax1.pcolormesh(time, depth, heat, cmap='seismic', vmin=-25, vmax=25)
+    plt.colorbar(map, ax=ax1, label='Temperature ($°C$)')
+    ax1.set_xlabel('Time (Years)')
+    ax1.set_ylabel('Depth (m)')
+    ax1.set_title('Ground Temperature: Kangerlussuaq, Greenland')
+    ax1.invert_yaxis()
+
+    # RIGHT PLOT: Summer/winter profiles
+    ax2.plot(winter, depth, label='Winter', color='blue')
+    ax2.plot(summer, depth, label='Summer', color='red', linestyle='--')
+    ax2.invert_yaxis()
+    ax2.set_xlabel('Temperature($°C$)')
+    ax2.set_ylabel('Depth(m)')
+    ax2.set_title('Ground Temperature: Kangerlussuaq')
+    ax2.legend()
+    ax2.grid()
+
+    # Add details to image:
+    fig.text(0.5, 0.01, f"Input:  depth = {depth[-1]}m, years = {time[-1]}, " +
+             f"dx = {dx}m, dt = 1 day, c2 = {c2}m^2/s", ha="center",
+             fontsize=12)
+
+    fig.tight_layout()
+    fig.savefig(outname)
+
+    return fig, ax1, ax2
+
+
 def main():
 
-    # Get solution using your solver:
-    x, t, heat = heatdiff(1, 0.2, 0.2, 0.02, c2=1, neumann=True, debug=False)
-    print(heat)
-    # Create a figure/axes object
-    fig, axes = plt.subplots(1, 1)
-    # Create a color map and add a color bar.
-    map = axes.pcolor(t, x, heat, cmap='seismic', vmin=0, vmax=1)
-    plt.colorbar(map, ax=axes, label='Temperature ($°C$)')
-    axes.set_xlabel('Time (Years)')
-    axes.set_ylabel('Depth (m)')
-    axes.set_title('Ground Temperature')
-    fig.savefig('heatmap.png')
-    # Set indexing for the final year of results:
-    loc = int(-365/0.002)  # Final 365 days of the result.
-    # Extract the min values over the final year:
-    summer = heat[:, loc:].max(axis=1)
-    winter = heat[:, loc:].min(axis=1)
-    # Create a temp profile plot:
-    fig, ax2 = plt.subplots(1, 1, figsize=(10, 8))
-    ax2.plot(winter, x, label='Winter', color='blue')
-    ax2.plot(summer, x, label='Summer', color='red')
-    fig.savefig('groundprofile.png')
+    # # Get solution using your solver:
+    # x, t, heat = heatdiff(1, 0.2, 0.2, 0.02, c2=1, neumann=True, debug=False)
+    # print(heat)
+    # # Create a figure/axes object
+    # fig, axes = plt.subplots(1, 1)
+    # # Create a color map and add a color bar.
+    # map = axes.pcolor(t, x, heat, cmap='seismic', vmin=0, vmax=1)
+    # plt.colorbar(map, ax=axes, label='Temperature ($°C$)')
+    # axes.set_xlabel('Time (Years)')
+    # axes.set_ylabel('Depth (m)')
+    # axes.set_title('Ground Temperature')
+    # fig.savefig('heatmap.png')
+    # # Set indexing for the final year of results:
+    # loc = int(-365/0.002)  # Final 365 days of the result.
+    # # Extract the min values over the final year:
+    # summer = heat[:, loc:].max(axis=1)
+    # winter = heat[:, loc:].min(axis=1)
+    # # Create a temp profile plot:
+    # fig, ax2 = plt.subplots(1, 1, figsize=(10, 8))
+    # ax2.plot(winter, x, label='Winter', color='blue')
+    # ax2.plot(summer, x, label='Summer', color='red')
+    # fig.savefig('groundprofile.png')
 
     # x, t, heat = heatdiff(1, 0.2, 0.2, 0.002, c2=1, neumann=True, debug=False)
     # fig, axes = plt.subplots(1, 1)
@@ -206,32 +269,12 @@ def main():
     dt = 86400
     c2 = 2.5e-7
 
-    # Q2
-    # years = [5*oneYear, 25*oneYear, 100*oneYear, 150*oneYear]
-    # for y in years:
-    #     x, t, heat = Kangerlussuaq(depth, y, dx, dt, c2, debug=False)
-    #     loc = -365
-    #     summer = heat[:, loc:].max(axis=1)
-    #     winter = heat[:, loc:].min(axis=1)
-    #     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
-    #     # change the time unit to year by dividing seconds in a year
-    #     map = ax1.pcolor(t/oneYear, x, heat, cmap='seismic', vmin=-25, vmax=25)
-    #     plt.colorbar(map, ax=ax1, label='Temperature ($°C$)')
-    #     ax1.set_xlabel('Time (Years)')
-    #     ax1.set_ylabel('Depth (m)')
-    #     ax1.set_title('Ground Temperature: Kangerlussuaq, Greenland')
-    #     ax1.invert_yaxis()
-    #     ax2.plot(winter, x, label='Winter', color='blue')
-    #     ax2.plot(summer, x, label='Summer', color='red', linestyle='--')
-    #     ax2.invert_yaxis()
-    #     ax2.set_xlabel('Temperature($°C$)')
-    #     ax2.set_ylabel('Depth(m)')
-    #     ax2.set_title('Ground Temperature: Kangerlussuaq')
-    #     ax2.legend()
-    #     ax2.grid()
-    #     fig.text(
-    #         0.5, 0.01, f"Input:  depth = {depth}m, years = {y/oneYear}, dx = {dx}m, dt = 1 day, c2 = {c2}m^2/s", ha="center", fontsize=12)
-    #     fig.savefig(f'kanger_prof_{int(y/oneYear)}.png')
+    # # Q2
+    years = [5*oneYear, 25*oneYear, 100*oneYear, 150*oneYear]
+    for y in years:
+        x, t, heat = Kangerlussuaq(depth, y, dx, dt, c2, debug=False)
+        plot_groundtemp(t/oneYear, x, heat,
+                        outname=f'kanger_prof_{int(y/oneYear)}.png')
 
     # x, t, heat = Kangerlussuaq(depth, 150*oneYear, dx, dt, c2, debug=False)
     # loc = -365
