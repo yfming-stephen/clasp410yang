@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-This file contains tools and scripts for completing Lab 1 for CLaSP 410.
+This file contains tools and scripts for completing Final Project for CLaSP 410.
 
 '''
 
@@ -258,7 +258,6 @@ def main():
     spread(10, 10, pspread=1, pbare=0, pstart=0,
            wind_dir="up", wind_speed=0, prain=0, rain_mask=3, init_cell=(10//2, 10//2), maxiter=4)
     # Q2
-
     wind_speeds = np.arange(5, 40, 5)
     for speed in wind_speeds:
         spread(20, 20, pspread=1, pbare=0, pstart=0, wind_dir="down", wind_speed=speed,
