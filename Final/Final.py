@@ -65,6 +65,8 @@ def spread(m, n, pspread, pbare, pstart, wind_dir, wind_speed, prain, rain_mask,
         Chance it is raining in the iteration
     rain_mask : int
         The size of the rain mask, used to create a rxr mask
+    init_cell : tuple
+        The initial burning cell position
     maxiter : int, defaults to 4
         Set the maximum number of iterations including initial condition
 
@@ -223,6 +225,8 @@ def plot_grid(forest, pspread, pbare, pstart, wind_speed, wind_dir, prain, rain_
         The direction of the wind ["up", "down", "left", "right"]
     prain : float
         Chance it is raining in the iteration
+    rain_mask : int
+        The side length of the rain mask
     iter : int
         Current iteration number
     '''
